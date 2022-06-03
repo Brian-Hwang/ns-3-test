@@ -396,6 +396,10 @@ namespace ns3
             {
                 m_recvdseqNumber++;
             }
+            else if (seq < m_recvdseqNumber)
+            {
+                NS_LOG_INFO("Recieved Retrans Packet:" << seq);
+            }
             else
             {
                 NS_LOG_INFO("Packet Loss:" << seq);
