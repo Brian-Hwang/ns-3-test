@@ -337,7 +337,7 @@ namespace ns3
         // HEADER
         SeqTsHeader seqTs;
         if(m_isResending){
-            seqTs.SetSeq(m_resendingNumber);
+            seqTs.SetSeq(m_recvdseqNumber);
         }
         else{
             seqTs.SetSeq(m_seqNumber++);
@@ -396,14 +396,12 @@ namespace ns3
             {
                 m_recvdseqNumber++;
             }
-            else if (seq == m_recvdseqNumber)
             else
             {
                 NS_LOG_INFO("Packet Loss:" << seq);
                 m_isResending = true;
-
-                m_resendingNumber = m_recvdseqNumber;
-                for (uint32_t i = m_recvdseqNumber; i < seq; i++)
+                
+                for (; m_recvdseqNumber < seq; m_recvdseqNumber++)
                 {
                     ScheduleTransmit(m_interval);
                 }
