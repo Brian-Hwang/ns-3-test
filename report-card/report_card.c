@@ -336,84 +336,15 @@ namespace ns3
         }
         // HEADER
         SeqTsHeader seqTs;
-        seqTs.SetSeq(m_seqNumber++);
-        p->AddHeader(seqTs);
-
-        m_socket->Send(p);
-        ++m_sent;
-
-        if (Ipv4Address::IsMatchingType(m_peerAddress))
-        {
-            NS_LOG_INFO("At time " << Simulator::Now().GetSeconds() << "s client sent " << m_size << " bytes to " << Ipv4Address::ConvertFrom(m_peerAddress) << " port " << m_peerPort);
+        if(m_isResending){
+            seqTs.SetSeq(m_resendingNumber);
         }
-        else if (Ipv6Address::IsMatchingType(m_peerAddress))
-        {
-            NS_LOG_INFO("At time " << Simulator::Now().GetSeconds() << "s client sent " << m_size << " bytes to " << Ipv6Address::ConvertFrom(m_peerAddress) << " port " << m_peerPort);
-        }
-        else if (InetSocketAddress::IsMatchingType(m_peerAddress))
-        {
-            NS_LOG_INFO("At time " << Simulator::Now().GetSeconds() << "s client sent " << m_size << " bytes to " << InetSocketAddress::ConvertFrom(m_peerAddress).GetIpv4() << " port " << InetSocketAddress::ConvertFrom(m_peerAddress).GetPort());
-        }
-        else if (Inet6SocketAddress::IsMatchingType(m_peerAddress))
-        {
-            NS_LOG_INFO("At time " << Simulator::Now().GetSeconds() << "s client sent " << m_size << " bytes to " << Inet6SocketAddress::ConvertFrom(m_peerAddress).GetIpv6() << " port " << Inet6SocketAddress::ConvertFrom(m_peerAddress).GetPort());
-        }
-
-        if (m_sent < m_count)
-        {
-            ScheduleTransmit(m_interval);
-        }
-    }
-
-    void
-    UdpReliableEchoClient::ReSend(void)
-    {
-        NS_LOG_FUNCTION(this);
-
-        NS_ASSERT(m_sendEvent.IsExpired());
-
-        Ptr<Packet> p;
-        if (m_dataSize)
-        {
-            NS_ASSERT_MSG(m_dataSize == m_size, "UdpReliableEchoClient::Send(): m_size and m_dataSize inconsistent");
-            NS_ASSERT_MSG(m_data, "UdpReliableEchoClient::Send(): m_dataSize but no m_data");
-            p = Create<Packet>(m_data, m_dataSize);
-        }
-        else
-        {
-            p = Create<Packet>(m_size);
-        }
-        Address localAddress;
-        m_socket->GetSockName(localAddress);
-        // call to the trace sinks before the packet is actually sent,
-        // so that tags added to the packet can be sent as well
-        m_txTrace(p);
-        if (Ipv4Address::IsMatchingType(m_peerAddress))
-        {
-            m_txTraceWithAddresses(p, localAddress, InetSocketAddress(Ipv4Address::ConvertFrom(m_peerAddress), m_peerPort));
-        }
-        else if (Ipv6Address::IsMatchingType(m_peerAddress))
-        {
-            m_txTraceWithAddresses(p, localAddress, Inet6SocketAddress(Ipv6Address::ConvertFrom(m_peerAddress), m_peerPort));
-        }
-        // HEADER
-        SeqTsHeader seqTs;
-        if (!m_isResending)
+        else{
             seqTs.SetSeq(m_seqNumber++);
-        else
-            seqTs.SetSeq(m_resendingNumber++);
-        p->AddHeader(seqTs);
-        if (!m_isResending)
-        {
-            m_socket->Send(p);
             ++m_sent;
         }
-        else
-        {
-            m_socket->Send(p);
-            uint32_t seq = m_resendingNumber - 1;
-            NS_LOG_INFO("Packet Retrans:" << seq);
-        }
+        p->AddHeader(seqTs);
+        m_socket->Send(p);
 
         if (Ipv4Address::IsMatchingType(m_peerAddress))
         {
